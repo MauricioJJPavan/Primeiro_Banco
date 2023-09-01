@@ -1,0 +1,77 @@
+-- Criação da tabela Cliente
+CREATE TABLE Cliente (
+    id INT PRIMARY KEY,
+    nome VARCHAR(255),
+    telefone VARCHAR(15)
+);
+
+-- Criação da tabela Veiculo
+CREATE TABLE Veiculo (
+    id INT PRIMARY KEY,
+    placa VARCHAR(10),
+    modelo VARCHAR(255),
+    ano INT
+);
+
+-- Criação da tabela Servico
+CREATE TABLE Servico (
+    id INT PRIMARY KEY,
+    descricao VARCHAR(255),
+    preco DECIMAL(10, 2)
+);
+
+-- Criação da tabela OrdemServico
+CREATE TABLE OrdemServico (
+    id INT PRIMARY KEY,
+    cliente_id INT,
+    veiculo_id INT,
+    data_inicio DATE,
+    data_fim DATE
+);
+
+-- Criação da tabela ServicoOrdem (tabela de associação)
+CREATE TABLE ServicoOrdem (
+    ordem_servico_id INT,
+    servico_id INT
+);
+
+-- Adição de chaves estrangeiras
+ALTER TABLE OrdemServico
+    ADD FOREIGN KEY (cliente_id) REFERENCES Cliente(id),
+    ADD FOREIGN KEY (veiculo_id) REFERENCES Veiculo(id);
+
+ALTER TABLE ServicoOrdem
+    ADD FOREIGN KEY (ordem_servico_id) REFERENCES OrdemServico(id),
+    ADD FOREIGN KEY (servico_id) REFERENCES Servico(id);
+
+-- Consultas SQL:
+
+-- 1. Recuperação simples de todas as ordens de serviço:
+SELECT * FROM OrdemServico;
+
+-- 2. Filtros para encontrar todas as ordens de serviço de um cliente específico:
+SELECT * FROM OrdemServico WHERE cliente_id = 1;
+
+-- 3. Expressão para calcular o valor total de uma ordem de serviço:
+SELECT os.id, SUM(s.preco) AS total
+FROM OrdemServico os
+JOIN ServicoOrdem so ON os.id = so.ordem_servico_id
+JOIN Servico s ON so.servico_id = s.id
+GROUP BY os.id;
+
+-- 4. Ordenação das ordens de serviço por data de início:
+SELECT * FROM OrdemServico ORDER BY data_inicio;
+
+-- 5. Condição de filtro para encontrar ordens de serviço com mais de 3 serviços:
+SELECT os.id, COUNT(so.servico_id) AS total_servicos
+FROM OrdemServico os
+JOIN ServicoOrdem so ON os.id = so.ordem_servico_id
+GROUP BY os.id
+HAVING total_servicos > 3;
+
+-- 6. Junção entre tabelas para listar os serviços realizados em uma ordem de serviço específica:
+SELECT os.id, s.descricao, s.preco
+FROM OrdemServico os
+JOIN ServicoOrdem so ON os.id = so.ordem_servico_id
+JOIN Servico s ON so.servico_id = s.id
+WHERE os.id = 1;
